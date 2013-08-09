@@ -1,4 +1,4 @@
-module Parse (parseLambda) where
+module Parse (parseLambda, parseLambdaUnsafe) where
 
 import Text.ParserCombinators.Parsec hiding (label)
 import Control.Applicative ((<$>))
@@ -7,6 +7,10 @@ import Types
 
 parseLambda :: String -> Either ParseError Expression
 parseLambda = parse expression ""
+
+parseLambdaUnsafe text = case parseLambda text of
+                           Left e  -> error $ show e
+                           Right e -> e
 
 expression = variable <|> sExpression
 
@@ -19,7 +23,7 @@ sExpression = do
   return body
 
 lambda = do
-  char '#'
+  char 'λ'
   whitespace
   param <- variable
   whitespace
