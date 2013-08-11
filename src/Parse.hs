@@ -14,7 +14,7 @@ parseLambdaUnsafe text = case parseLambda text of
 
 expression = variable <|> sExpression
 
-variable = V <$> many1 letter
+variable = V <$> many1 (letter <|> digit)
 
 sExpression = do
   char '('
