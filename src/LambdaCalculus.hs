@@ -1,5 +1,9 @@
-import Parse (parseLambda)
+import Parse       (parseLambda)
+import PrettyPrint (prettyPrint)
+import Eval        (beta)
 
 main = do
   text <- getContents
-  print $ parseLambda $ text
+  case parseLambda text of
+    Left e  -> error $ show e
+    Right e -> putStrLn $ prettyPrint $ beta e
