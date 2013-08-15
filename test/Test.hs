@@ -51,6 +51,13 @@ main = hspec $ do
         "((λ a (λ b (λ c (λ d a)))) (λ x (d (b c))))" `reducesTo` "(λ e (λ e (λ e (λ x (d (b c))))))"
         "((λ a (λ b (λ c a))) (λ x (b c)))"           `reducesTo` "(λ d (λ d (λ x (b c))))"
 
+      it "it reduces an application by reducing its component parts first" $ do
+        "(((L f (L s f)) a) b)" `reducesTo` "((L s a) b)"
+        "((L s a) b)"           `reducesTo` "a"
+
+      it "reduces the argument if the applicator is fully reduced" $ do
+        "(a ((λ x x) b))" `reducesTo` "(a b)"
+
     describe "freeVariables" $ do
       let hasFreeVariables a b = (map prettyPrint $ freeVariables $ parseLambdaUnsafe a) `shouldBe` (map prettyPrint b)
 

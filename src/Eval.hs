@@ -8,6 +8,8 @@ alpha target replacement (L param body) = L (alpha target replacement param) (al
 alpha target replacement (A app arg)    = A (alpha target replacement app) (alpha target replacement arg)
 
 beta (A (L param body) arg) = replace param arg body
+beta (A (V name) arg)       = A (V name) (beta arg)
+beta (A app arg)            = A (beta app) arg
 beta application            = application
 
 replace (V target) replacement (V body) | target == body = replacement
