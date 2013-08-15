@@ -37,4 +37,5 @@ reduce expression FullReduction | fullyReduced = [expression]
                                 where reduction    = beta expression
                                       fullyReduced = expression == reduction
 reduce expression (ReduceNTimes 0) = [expression]
+reduce expression (ReduceNTimes 1) = [expression]
 reduce expression (ReduceNTimes n) = beta expression : reduce (beta expression) (ReduceNTimes $ n -1)
