@@ -5,12 +5,12 @@ import Parse              (parseLambda)
 import PrettyPrint        (prettyPrint)
 import Eval               (beta)
 
-data Mode = ReduceOnce
-          | FullReduction
-          | ReduceNTimes Integer
+data Mode = Once
+          | Full
+          | Ntimes Integer
           deriving (Show, Read, Eq)
 
-allModes = [ReduceOnce, FullReduction, ReduceNTimes 10]
+allModes = [Once, Full, Ntimes 10]
 
 main = do
   mode <- getMode
@@ -25,17 +25,18 @@ formatRow (number, (expression, _)) = concat [show number, ".\t", prettyPrint ex
 getMode = do
   args <- getArgs
   if null args
-    then return FullReduction
-    else do
-      case readMay $ intercalate " " args of
-        Nothing   -> error $ "Invalid reduction mode '" ++ head args ++ "'\n\nValid modes are:\n" ++ intercalate "\n" (map show allModes)
-        Just mode -> return mode
+    then return Full
+    else case readMay $ intercalate " " args of
+           Nothing   -> error $ "Invalid reduction mode '" ++ head args ++ "'\n\nValid modes are:\n" ++ intercalate "\n" (map show allModes)
+           Just mode -> return mode
 
-reduce expression ReduceOnce    = [beta expression]
-reduce expression FullReduction | fullyReduced = []
-                                | otherwise    = reduction : reduce reduction FullReduction
-                                where reduction    = beta expression
-                                      fullyReduced = fst expression == fst reduction
-reduce expression (ReduceNTimes 0) = [expression]
-reduce expression (ReduceNTimes 1) = [expression]
-reduce expression (ReduceNTimes n) = beta expression : reduce (beta expression) (ReduceNTimes $ n -1)
+reduce expression Once    = reduce expression (Ntimes 1)
+reduce expression Full | fullyReduced = []
+                       | otherwise    = reduction : reduce reduction Full
+                       where reduction    = beta expression
+                             fullyReduced = fst expression == fst reduction
+reduce expression (Ntimes 0) = []
+reduce expression (Ntimes n) | fullyReduced = []
+                             | otherwise    = reduction : reduce reduction (Ntimes $ n -1)
+                             where reduction    = beta expression
+                                   fullyReduced = fst expression == fst reduction

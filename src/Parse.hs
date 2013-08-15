@@ -35,9 +35,11 @@ environment = do
 environmentSymbol = char '#'
 
 symbolBinding = do
+  whitespace
   name <- symbolExpression
   whitespace
   binding <- expression
+  whitespace
   return (name, binding)
 
 symbolExpression = S <$> many1 upper

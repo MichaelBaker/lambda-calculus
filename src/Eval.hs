@@ -8,13 +8,18 @@ alpha target replacement (L param body) = L (alpha target replacement param) (al
 alpha target replacement (A app arg)    = A (alpha target replacement app) (alpha target replacement arg)
 
 beta (E symbol binding body,  environment) = beta (body, (symbol, binding) : environment)
-beta (S name,                 environment) = case lookup (S name) environment of
-                                               Nothing   -> error $ "Unbound symbol " ++ name
-                                               Just body -> (body, environment)
-beta ((A (L param body) arg), environment) = (replace param arg body, environment)
+beta (S name,                 environment) = (desymbolize (S name) environment, environment)
+beta ((A (L param body) arg), environment) = (replace param arg (desymbolize body environment), environment)
 beta ((A (V name) arg),       environment) = (A (V name) (fst $ beta (arg, environment)), environment)
 beta ((A app arg),            environment) = (A (fst $ beta (app, environment)) arg, environment)
 beta (application,            environment) = (application, environment)
+
+desymbolize (S name) environment = case lookup (S name) environment of
+                                     Nothing   -> error $ "Unbound symbol " ++ name
+                                     Just body -> body
+desymbolize (L param body) environment = L param (desymbolize body environment)
+desymbolize (A app arg) environment    = A (desymbolize app environment) (desymbolize arg environment)
+desymbolize (V label) environment      = V label
 
 replace (V target) replacement (V body) | target == body = replacement
                                         | otherwise      = V body
@@ -34,3 +39,5 @@ availableVariable takenVariables = head $ filter notTaken $ variableNames 'a' 1
 freeVariables (V a)          = [V a]
 freeVariables (L param body) = filter (/= param) $ freeVariables body
 freeVariables (A app arg)    = freeVariables app ++ freeVariables arg
+freeVariables (S _)          = []
+freeVariables (E _ _ _)      = []
