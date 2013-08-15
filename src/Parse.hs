@@ -23,12 +23,14 @@ sExpression = do
   return body
 
 lambda = do
-  char 'λ'
+  lambdaSymbol
   whitespace
   param <- variable
   whitespace
   body <- expression
   return $ L param body
+
+lambdaSymbol = char 'λ' <|> char 'L'
 
 application = do
   app <- expression

@@ -19,6 +19,9 @@ main = hspec $ do
     it "parses parthentheses starting with a lambda as an application" $ do
       parseLambdaUnsafe "((λ a a) b)" `shouldBe` A (L (V "a") (V "a")) (V "b")
 
+    it "accepts 'L' in place of 'λ'" $ do
+      parseLambdaUnsafe "((L a a) b)" `shouldBe` A (L (V "a") (V "a")) (V "b")
+
   describe "Eval" $ do
     let p             = parseLambdaUnsafe
         reducesTo a b = prettyPrint (beta $ parseLambdaUnsafe a) `shouldBe` (prettyPrint . parseLambdaUnsafe) b
