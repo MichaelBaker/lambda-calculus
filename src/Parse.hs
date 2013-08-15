@@ -12,15 +12,38 @@ parseLambdaUnsafe text = case parseLambda text of
                            Left e  -> error $ show e
                            Right e -> e
 
-expression = variable <|> sExpression
+expression = environment <|> variable <|> sExpression <|> symbolExpression
 
-variable = V <$> many1 (letter <|> digit)
+variable = V <$> many1 (lower <|> digit)
 
 sExpression = do
   char '('
-  body <- lambda <|> application
+  body <- environment <|> lambda <|> application
   char ')'
   return body
+
+environment = do
+  environmentSymbol
+  whitespace
+  char '['
+  bindings <- many1 symbolBinding
+  char ']'
+  whitespace
+  body <- expression
+  return $ nestBindings bindings body
+
+environmentSymbol = char '#'
+
+symbolBinding = do
+  name <- symbolExpression
+  whitespace
+  binding <- expression
+  return (name, binding)
+
+symbolExpression = S <$> many1 upper
+
+nestBindings [] body                       = body
+nestBindings ((symbol, binding):rest) body = E symbol binding $ nestBindings rest body
 
 lambda = do
   lambdaSymbol
@@ -38,4 +61,4 @@ application = do
   arg <- expression
   return $ A app arg
 
-whitespace = many1 (space <|> newline <|> tab)
+whitespace = many (space <|> newline <|> tab)

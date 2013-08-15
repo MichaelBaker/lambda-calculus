@@ -18,9 +18,9 @@ main = do
 
   case parseLambda text of
     Left e  -> error $ show e
-    Right e -> mapM_ (putStrLn . formatRow) $ zip [0..] (e : reduce e mode)
+    Right e -> mapM_ (putStrLn . formatRow) $ zip [0..] ((e, []) : reduce (e, []) mode)
 
-formatRow (number, expression) = concat [show number, ".\t", prettyPrint expression]
+formatRow (number, (expression, _)) = concat [show number, ".\t", prettyPrint expression]
 
 getMode = do
   args <- getArgs
@@ -32,10 +32,10 @@ getMode = do
         Just mode -> return mode
 
 reduce expression ReduceOnce    = [beta expression]
-reduce expression FullReduction | fullyReduced = [expression]
+reduce expression FullReduction | fullyReduced = []
                                 | otherwise    = reduction : reduce reduction FullReduction
                                 where reduction    = beta expression
-                                      fullyReduced = expression == reduction
+                                      fullyReduced = fst expression == fst reduction
 reduce expression (ReduceNTimes 0) = [expression]
 reduce expression (ReduceNTimes 1) = [expression]
 reduce expression (ReduceNTimes n) = beta expression : reduce (beta expression) (ReduceNTimes $ n -1)

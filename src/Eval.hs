@@ -7,10 +7,14 @@ alpha target replacement body@(V _) | target == body = replacement
 alpha target replacement (L param body) = L (alpha target replacement param) (alpha target replacement body)
 alpha target replacement (A app arg)    = A (alpha target replacement app) (alpha target replacement arg)
 
-beta (A (L param body) arg) = replace param arg body
-beta (A (V name) arg)       = A (V name) (beta arg)
-beta (A app arg)            = A (beta app) arg
-beta application            = application
+beta (E symbol binding body,  environment) = beta (body, (symbol, binding) : environment)
+beta (S name,                 environment) = case lookup (S name) environment of
+                                               Nothing   -> error $ "Unbound symbol " ++ name
+                                               Just body -> (body, environment)
+beta ((A (L param body) arg), environment) = (replace param arg body, environment)
+beta ((A (V name) arg),       environment) = (A (V name) (fst $ beta (arg, environment)), environment)
+beta ((A app arg),            environment) = (A (fst $ beta (app, environment)) arg, environment)
+beta (application,            environment) = (application, environment)
 
 replace (V target) replacement (V body) | target == body = replacement
                                         | otherwise      = V body

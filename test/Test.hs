@@ -6,25 +6,30 @@ import Eval        (alpha, beta, freeVariables)
 import Types
 
 main = hspec $ do
+  let parsesTo input result = parseLambdaUnsafe input `shouldBe` result
+
   describe "Parse" $ do
     it "parses words into variables" $ do
-      parseLambdaUnsafe "hello" `shouldBe` V "hello"
+      "hello" `parsesTo` V "hello"
 
     it "parses (λ a a) as a lambda with parameter 'a' and body 'a'" $ do
-      parseLambdaUnsafe "(λ a a)" `shouldBe` L (V "a") (V "a")
+      "(λ a a)" `parsesTo` L (V "a") (V "a")
 
     it "parses parentheses starting with a variable as application" $ do
-      parseLambdaUnsafe "(a b)" `shouldBe` A (V "a") (V "b")
+      "(a b)" `parsesTo` A (V "a") (V "b")
 
     it "parses parthentheses starting with a lambda as an application" $ do
-      parseLambdaUnsafe "((λ a a) b)" `shouldBe` A (L (V "a") (V "a")) (V "b")
+      "((λ a a) b)" `parsesTo` A (L (V "a") (V "a")) (V "b")
 
     it "accepts 'L' in place of 'λ'" $ do
-      parseLambdaUnsafe "((L a a) b)" `shouldBe` A (L (V "a") (V "a")) (V "b")
+      "((L a a) b)" `parsesTo` A (L (V "a") (V "a")) (V "b")
+
+    it "allows you to define names in capital letters" $ do
+      "(# [A (L a a)] (A b))" `parsesTo` E (S "A") (L (V "a") (V "a")) (A (S "A") (V "b"))
 
   describe "Eval" $ do
     let p             = parseLambdaUnsafe
-        reducesTo a b = prettyPrint (beta $ parseLambdaUnsafe a) `shouldBe` (prettyPrint . parseLambdaUnsafe) b
+        reducesTo a b = prettyPrint (fst $ beta (parseLambdaUnsafe a, [])) `shouldBe` (prettyPrint . parseLambdaUnsafe) b
 
     describe "beta" $ do
       it "replaces the parameter of a lambda with the argument" $ do
@@ -57,6 +62,9 @@ main = hspec $ do
 
       it "reduces the argument if the applicator is fully reduced" $ do
         "(a ((λ x x) b))" `reducesTo` "(a b)"
+
+      it "replaces symbols with their values when they get evaluated" $ do
+        "(# [A (λ x x)] A)" `reducesTo` "(λ x x)"
 
     describe "freeVariables" $ do
       let hasFreeVariables a b = (map prettyPrint $ freeVariables $ parseLambdaUnsafe a) `shouldBe` (map prettyPrint b)
